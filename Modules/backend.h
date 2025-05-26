@@ -50,6 +50,7 @@ public:
     static bool is_whole(QString s);
     static QString whole_vers(QString s);
     static bool bigger_pemdas(const QString s1, const QString s2);
+    static bool isUnary(const QString s);
 
     QString mainString() const{
         return m_mainString;

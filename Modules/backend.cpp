@@ -75,11 +75,7 @@ QString Backend::whole_vers(QString s){
 }
 bool Backend::bigger_pemdas(const QString s1, const QString s2){
     if (s1 == "+" || s1 == "-"){
-        if (s2 == "log" || s2 == "!")
-            return false;
-        else if (s2 == "^" || s2 == "√")
-            return false;
-        else if (s1 == "*" || s1 == "/")
+        if (s2 != "(")
             return false;
     }
     else if (s1 == "*" || s1 == "/"){
@@ -87,12 +83,21 @@ bool Backend::bigger_pemdas(const QString s1, const QString s2){
             return false;
         else if (s2 == "^" || s2 == "√")
             return false;
+        else if (s2 == "*" || s2 == "/")
+            return false;
     }
     else if (s1 == "^" || s1 == "√"){
         if (s2 == "log" || s2 == "!")
             return false;
+        else if (s2 == "^" || s2 == "√")
+            return false;
     }
     return true;
+}
+bool Backend::isUnary(const QString s){
+    if (s == "!" || s == "√" || s == "log" || s == "ln")
+        return true;
+    return false;
 }
 
 QString Backend::add_whole(QString s1, QString s2){
@@ -394,6 +399,7 @@ QString Backend::fast_calc_e(long long unsigned limit){
 // vector<QString> Backend::collatz(QString n);
 
 QString Backend::final_eval(QString s1, QString s2, QString op){
+    //s2 for unary operators
     if (op == "+")
         return add_whole(s1, s2);
     else if (op == "-"){
@@ -406,19 +412,19 @@ QString Backend::final_eval(QString s1, QString s2, QString op){
         return div_whole(s1, s2);
     }
     // else if (op == "log"){
-    //     return log_10(s1);
+    //     return log_10(s2);
     // }
     // else if (op == "ln"){
-    //     return log_e(s1);
+    //     return log_e(s2);
     // }
     else if (op == "!"){
-        return fact(s1.toULongLong());
+        return fact(s2.toULongLong());
     }
     else if (op == "^"){
         return pow(s1, s2.toULongLong());
     }
     // else if (op == "√"){
-    //     return radix(s1);
+    //     return radix(s2);
     // }
     else{
         throw("Unknown operator."); //fix this into an error dialog
@@ -426,18 +432,27 @@ QString Backend::final_eval(QString s1, QString s2, QString op){
 }
 
 Q_INVOKABLE QString Backend::expr_eval(QString s){
-    //multiple mismatched parenthesis
     stack<QString> values, ops;
     bool precIsOp = false;
-    long long unsigned parenthesisCount = 0;
     for (long long unsigned i = 0, size = s.size(); i < size; i++){
-        if (parenthesisCount < 0){
-            throw("Mismatched parenthesis");
-        }
         if (s[i] == '('){
-            ops.push(s[i]);
-            parenthesisCount++;
-            precIsOp = false;
+            if (i > 0 && s[i-1].isDigit()){
+                while (!ops.empty() && !bigger_pemdas("*", ops.top())){
+                    QString val2 = values.top();
+                    values.pop();
+
+                    QString val1 = values.top();
+                    values.pop();
+
+                    QString op = ops.top();
+                    ops.pop();
+
+                    values.push(final_eval(val1, val2, op));
+                }
+                ops.push("*");
+            }
+            ops.push("(");
+            precIsOp = true;
         }
         else if (s[i].isDigit()){
             QString temp;
@@ -450,7 +465,7 @@ Q_INVOKABLE QString Backend::expr_eval(QString s){
                     if (!dot)
                         dot = true;
                     else
-                        qDebug() << "too many dots"; //try/catch, dialog
+                        throw("Too many dots."); //try/catch, dialog
                 }
 
                 temp += s[i];
@@ -463,8 +478,10 @@ Q_INVOKABLE QString Backend::expr_eval(QString s){
             precIsOp = false;
         }
         else if (s[i] == ')'){
-            parenthesisCount--;
             while(ops.top() != '('){
+                if (ops.empty())
+                    throw("Mismatched parenthesis.");
+
                 QString val2 = values.top();
                 values.pop();
 
@@ -472,25 +489,47 @@ Q_INVOKABLE QString Backend::expr_eval(QString s){
                 values.pop();
 
                 QString t_op = ops.top();
+                ops.pop();
 
                 values.push(final_eval(val1, val2, t_op));
             }
+            ops.pop();
             precIsOp = false;
         }
         else{
-            if (precIsOp){
-                throw("Two or more operators in a row.");
-            }
             if (s[i] == 'l'){
+                while (!ops.empty() && !bigger_pemdas("log", ops.top())){
+                    if (s[i] == "^" && ops.top() == "^")
+                        break;
+
+                    QString val2 = values.top();
+                    values.pop();
+
+                    QString val1 = values.top();
+                    values.pop();
+
+                    QString op = ops.top();
+                    ops.pop();
+
+                    values.push(final_eval(val1, val2, op));
+                }
                 if (s[i+1] == 'n'){
                     ops.push("ln");
                 }
                 else if (s[i+1] == 'o' && s[i+2] == 'g'){
                     ops.push("log");
                 }
+                else throw("Unknown operator.");
             }
             else{
+                if (precIsOp){
+                    throw("Two or more operators in a row.");
+                }
                 while (!ops.empty() && !bigger_pemdas(s[i], ops.top())){
+                    qDebug() << "C";
+                    if (s[i] == "^" && ops.top() == "^")
+                        break;
+
                     QString val2 = values.top();
                     values.pop();
 
@@ -503,8 +542,8 @@ Q_INVOKABLE QString Backend::expr_eval(QString s){
                     values.push(final_eval(val1, val2, op));
                 }
                 ops.push(s[i]);
+                precIsOp = true;
             }
-            precIsOp = true;
         }
         // qDebug() << values.top() << " " << ops.top();
     }
@@ -512,15 +551,20 @@ Q_INVOKABLE QString Backend::expr_eval(QString s){
     while(!ops.empty()){
         // if (values.size() == 1)
         //     qDebug() << "values.size() is one";
+        if (ops.top() == "(" || ops.top() == ")")
+            throw("Mismatched parenthesis.");
+
+        QString op = ops.top();
+        ops.pop();
 
         QString val2 = values.top();
         values.pop();
 
-        QString val1 = values.top();
-        values.pop();
-
-        QString op = ops.top();
-        ops.pop();
+        QString val1 = "";
+        if (!isUnary(op)){
+            val1 = values.top();
+            values.pop();
+        }
 
         values.push(final_eval(val1, val2, op));
     }

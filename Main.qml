@@ -356,7 +356,18 @@ Window{
                         placeholderText: "Type something...\nDrag and drop files?"
                         placeholderTextColor: "#AAAAAAAA"
                         wrapMode: Text.WrapAnywhere
-                        Keys.onPressed: (event) => {if (event.key === Qt.Key_Escape) focus = false}
+                        Keys.onPressed: (event) => {
+                                            if (event.key === Qt.Key_Escape)
+                                                focus = false;
+                                            else if (event.key === Qt.Key_Return || event.key == Qt.Key_Enter){
+                                                event.accepted = true;
+                                                keyPressed("=");
+                                            }
+                                            else if (event.key === Qt.Key_ParenLeft){
+                                                event.accepted = true;
+                                                keyPressed("(");
+                                            }
+                                        }
                     }
                 }
             }
