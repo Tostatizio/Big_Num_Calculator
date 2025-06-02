@@ -1,28 +1,29 @@
-#include "backend.h"
+#include <iostream>
+#include <string>
+#include <fstream>
 #include <stack>
-#include <QMessageBox>
+#include <vector>
+#include <algorithm>
+#include <exception>
+#include <stdexcept>
+using namespace std;
 
-Backend::Backend(QObject *parent)
-    : QObject{parent}
-{
-}
-
-void Backend::rem_end_zero(QString &s){
+void rem_end_zero(string &s){
     while(s.back()=='0')
-        s.removeLast();
+        s.pop_back();
 }
-void Backend::rem_lead_zero(QString &s){
+void rem_lead_zero(string &s){
     long long unsigned size = s.size();
-    if (s[0] != 0)
+    if (s[0] != '0')
         return;
-    for (int i = 1; i < size; i++)
+    for (long long i = 1; i < size; i++)
         if (s[i] != '0'){
-            s = s.sliced(i, size - i);
+            s = s.substr(i, size - i);
             return;
         }
     s = "";
 }
-bool Backend::is_greater(QString a, QString b){
+bool is_greater(string a, string b){
     if(a.size()!=b.size())
         return (a.size()>b.size());
 
@@ -34,46 +35,46 @@ bool Backend::is_greater(QString a, QString b){
     }
     return false;
 }
-bool Backend::is_less_than(QString a, QString b){
+bool is_less_than(string a, string b){
     if(a.size()!=b.size())
         return (a.size()<b.size());
 
     long long unsigned size=a.size();
-    for (int i=0; i<size; i++)
+    for (long long i=0; i<size; i++)
     {
         if(a[i]!=b[i])
             return (a[i]<b[i]);
     }
     return false;
 }
-QString Backend::whole_part(QString s){
+string whole_part(string s){
     long long unsigned size=s.size();
-    for(int i=1; i<size; i++)
+    for(long long i=1; i<size; i++)
     {
         if(s[i]=='.')
-            return s.sliced(0,i);
+            return s.substr(0,i);
     }
     return s;
 }
-bool Backend::is_whole(QString s){
+bool is_whole(string s){
     long long unsigned size=s.size();
-    for(int i=1; i<size; i++)
+    for(long long i=1; i<size; i++)
     {
         if(s[i]=='.')
             return false;
     }
     return true;
 }
-QString Backend::whole_vers(QString s){
-    QString ris="";
-    for(int i=s.size()-1; i>=0; --i)
+string whole_vers(string s){
+    string ris="";
+    for(long long i=s.size()-1; i>=0; --i)
         if(s[i]=='.')
             continue;
         else
             ris+=s[i];
     return ris;
 }
-bool Backend::bigger_pemdas(const QString s1, const QString s2){
+bool bigger_pemdas(const string s1, const string s2){
     if (s1 == "+" || s1 == "-"){
         if (s2 != "(")
             return false;
@@ -94,42 +95,49 @@ bool Backend::bigger_pemdas(const QString s1, const QString s2){
     }
     return true;
 }
-bool Backend::isUnary(const QString s){
+bool isUnary(const string s){
     if (s == "!" || s == "√" || s == "log" || s == "ln")
         return true;
     return false;
 }
+bool isOperator(const string op){
+    if (op == "+" || op == "-" || op == "*" || op == "/" || op == "mod" || op == "!" || 
+    op == "log" || op == "ln" || op == "^" || op == "√"){
+        return true;
+    }
+    return false;
+}
 
-QString Backend::add_whole(QString s1, QString s2){
-    int carry = 0;
-    QString result;
-    int i = s1.length() - 1, j = s2.length() - 1;
+string add_whole(string s1, string s2){
+    long long carry = 0;
+    string result;
+    long long i = s1.length() - 1, j = s2.length() - 1;
 
     while (i >= 0 || j >= 0 || carry) {
-        int sum = carry;
-        if (i >= 0) sum += s1.sliced(i--, 1).toInt();
-        if (j >= 0) sum += s2.sliced(j--, 1).toInt();
-        result += (QChar)(sum % 10 + '0');
+        long long sum = carry;
+        if (i >= 0) sum += s1[i--] - '0';
+        if (j >= 0) sum += s2[j--] - '0';
+        result += sum % 10 + '0';
         carry = sum / 10;
     }
 
     reverse(result.begin(), result.end());
     return result;
 }
-QString Backend::sub_whole(QString s1, QString s2){
-    int borrow = 0;
-    QString result;
-    int i = s1.length() - 1, j = s2.length() - 1;
+string sub_whole(string s1, string s2){
+    long long borrow = 0;
+    string result;
+    long long i = s1.length() - 1, j = s2.length() - 1;
 
     while (i >= 0) {
-        int diff = s1[i].unicode() - '0' - (j >= 0 ? s2[j].unicode() - '0' : 0) - borrow;
+        long long diff = s1[i] - '0' - (j >= 0 ? s2[j] - '0' : 0) - borrow;
         if (diff < 0) {
             diff += 10;
             borrow = 1;
         } else {
             borrow = 0;
         }
-        result.push_back((QChar)(diff + '0'));
+        result.push_back((diff + '0'));
         i--;
         j--;
     }
@@ -138,32 +146,32 @@ QString Backend::sub_whole(QString s1, QString s2){
     rem_lead_zero(result);
     return result;
 }
-// decimal Backend::add_dec(decimal a, decimal b);
-// decimal Backend::sub_dec(decimal a, decimal b);
-QString Backend::norm_mult(QString a, QString b){
+// decimal add_dec(decimal a, decimal b);
+// decimal sub_dec(decimal a, decimal b);
+string norm_mult(string a, string b){
     if (a=="0" || b=="0"){
         return "0";
     }
-    int m = a.size() - 1, n = b.size() - 1, carry = 0;
-    QString product;
-    int temp1=m+n;
-    int temp2;
-    for (int i=0; i<=temp1 || carry; ++i) {
+    long long m = a.size() - 1, n = b.size() - 1, carry = 0;
+    string product;
+    long long temp1=m+n;
+    long long temp2;
+    for (long long i=0; i<=temp1 || carry; ++i) {
         temp2=min(i,m);
-        for (int j=max(0, i-n); j<=temp2; ++j)
-            carry += (a[m-j].unicode() - '0') * (b[n-i+j].unicode() - '0');
-        product += (QChar)(carry % 10 + '0');
+        for (long long j=max((long long)0, i-n); j<=temp2; ++j)
+            carry += (a[m-j] - '0') * (b[n-i+j] - '0');
+        product += (char)(carry % 10 + '0');
         carry /= 10;
     }
     reverse(begin(product), end(product));
     return product;
 }
-// decimal Backend::norm_mult_dec(decimal a, decimal b);
-QString Backend::kar_mult(QString a, QString b){
+// decimal norm_mult_dec(decimal a, decimal b);
+string kar_mult(string a, string b){
     if (a.length() > b.length())
         swap(a, b);
 
-    int n1 = a.length(), n2 = b.length();
+    long long n1 = a.length(), n2 = b.length();
 
     if(n2>2*n1 && n2<1250)
         return norm_mult(a,b);
@@ -185,15 +193,15 @@ QString Backend::kar_mult(QString a, QString b){
         b = "0" + b;
     }
 
-    QString al=a.sliced(0,n1/2), ar=a.sliced(n1/2, n1/2), bl=b.sliced(0,n1/2), br=b.sliced(n1/2, n1/2);
+    string al=a.substr(0,n1/2), ar=a.substr(n1/2, n1/2), bl=b.substr(0,n1/2), br=b.substr(n1/2, n1/2);
 
-    QString p = kar_mult(al, bl);
+    string p = kar_mult(al, bl);
 
-    QString q = kar_mult(ar, br);
+    string q = kar_mult(ar, br);
 
-    QString temp1=add_whole(al, ar), temp2=add_whole(bl, br);
+    string temp1=add_whole(al, ar), temp2=add_whole(bl, br);
 
-    QString r = sub_whole(
+    string r = sub_whole(
         kar_mult(
             temp1,
             temp2
@@ -201,18 +209,18 @@ QString Backend::kar_mult(QString a, QString b){
         add_whole(p, q)
         );
 
-    p+=QString(n1,'0');
+    p+=string(n1,'0');
 
-    r+=QString(n1/2,'0');
+    r+=string(n1/2,'0');
 
-    QString ans = add_whole(p, add_whole(q, r));
+    string ans = add_whole(p, add_whole(q, r));
 
 
     rem_lead_zero(ans);
 
     return ans;
 }
-QString Backend::pow(QString a, long long int b){
+string pow(string a, long long b){
     string ris="1";
     if(b==1)
         return a;
@@ -226,55 +234,61 @@ QString Backend::pow(QString a, long long int b){
     }
     return "";
 }
-// decimal Backend::pow_dec(decimal a, long long unsigned b);
-QString Backend::basic_mod(QString a, QString b){
+// decimal pow_dec(decimal a, long long unsigned b);
+string basic_mod(string a, string b){
     while(is_greater(a,b))
         a=sub_whole(a,b);
     return a;
 }
-QString Backend::div2(QString n){
-    if(n.size()<3)
-        return QString::number(n.toInt()/2);
+string div2(string n){
+    if(n.size()<3){
+        string temp = to_string(stoll(n)/(long long)2);
+        return temp;
+    }
     long long unsigned size=n.size();
-    int num=0;
-    int pos=0;
+    long long num=0;
+    long long pos=0;
 
-    if(n[0].unicode()-'0'<=1)
+    if(n[0]-'0'<=1)
         pos=2;
     else
         pos=1;
 
-    QString ris="";
-    num=n.sliced(0,pos).toInt();
+    string ris="";
+    num=stoll(n.substr(0,pos));
 
     while(pos<size)
     {
-        num=10*num+n[pos].unicode()-'0';
+        num=10*num+n[pos]-'0';
         ris+=to_string(num/2);
         num=num%2;
         pos++;
     }
     return ris;
 }
-QString Backend::div_whole(QString a, QString b){
+string div_whole(string a, string b)
+{
     if (a.size() < b.size())
         return "0";
 
-    QString divisors[10];
+    string divisors[10];
+    string temp;
     long long unsigned size_b = b.size(),
-        size_a = a.size();
+                       size_a = a.size();
 
-    for (int i = 0; i < 10; i++){
-        divisors[i] = norm_mult((QChar)(i + '0'), b);
+    for (long long i = 0; i < 10; i++){
+        divisors[i] = norm_mult(string(1, (char)(i + '0')), b);
     }
-
-    QString curr = a.sliced(0, size_b), ris = "";
+    
+    string curr = a.substr(0, size_b), ris = "";
     long long unsigned pos = size_b;
     if (is_greater(b, curr) && size_b != size_a){
         curr+=a[size_b];
         pos++;
     }
     while(pos < size_a){
+        if (curr == "")
+            curr = "0";
         auto it = lower_bound(divisors, divisors+10, curr, is_less_than);
         // cout << "pos: " << divi_pos << " it=" << *it << endl;
         if (it == divisors+10){
@@ -282,13 +296,13 @@ QString Backend::div_whole(QString a, QString b){
             curr = sub_whole(curr, divisors[9]);
         }
         else{
-            QString divi = *it;
+            string divi = *it;
             ptrdiff_t divi_pos = it-divisors;
             if (is_greater(divi, curr))
-                ris+=to_string(divi_pos - 1);
+                ris+=string(1, divi_pos - 1 + '0');
             else
-                ris+=to_string(divi_pos);
-
+                ris+=string(1, divi_pos + '0');
+        
             if (divi_pos != 0 && divi_pos < 10){
                 rem_lead_zero(curr);
                 if (!is_greater(divi, curr))
@@ -299,30 +313,32 @@ QString Backend::div_whole(QString a, QString b){
             else if (curr == divi)
                 curr = "0";
         }
-
+        
         curr += a[pos];
         rem_lead_zero(curr);
         // cout << "curr: " << curr << " pos: " << pos << " ris: " << ris << endl;
         pos++;
     }
 
+    if (curr == "")
+            curr = "0";
     auto it = lower_bound(divisors, divisors+10, curr, is_less_than);
     if (it == divisors+10)
         ris+="9";
     else{
-        QString divi = *it;
+        string divi = *it;
         ptrdiff_t divi_pos = it-divisors;
         if (is_greater(divi, curr))
-            ris+=to_string(divi_pos - 1);
+            ris+=string(1, divi_pos - 1 + '0');
         else
-            ris+=to_string(divi_pos);
+            ris+=string(1, divi_pos + '0');
     }
     return ris;
 }
-// pair<QString,QString> Backend::fib_luc(long long unsigned n);
-// QString Backend::fib(long long unsigned n);
-// QString Backend::luc(long long unsigned n);
-long long unsigned Backend::count_fact(long long unsigned a, long long unsigned b){
+// pair<string,string> fib_luc(long long unsigned n);
+// string fib(long long unsigned n);
+// string luc(long long unsigned n);
+long long unsigned count_fact(long long unsigned a, long long unsigned b){
     long long unsigned sum=0;
     while(b>=1)
     {
@@ -331,16 +347,15 @@ long long unsigned Backend::count_fact(long long unsigned a, long long unsigned 
     }
     return sum;
 }
-QString Backend::fact(long long unsigned n){
-    bool arr[n+1];
-    fill(arr, arr+n+1, true);
+string fact(const long long unsigned n){
+    vector<bool> arr(n+1, true);
     arr[0]=false;
     arr[1]=false;
-    for(int i=2; i*i<=n; i++)
+    for(long long i=2; i*i<=n; i++)
     {
         if(arr[i])
         {
-            for(int j=i*i; j<=n; j+=i)
+            for(long long j=i*i; j<=n; j+=i)
             {
                 arr[j]=false;
             }
@@ -348,35 +363,35 @@ QString Backend::fact(long long unsigned n){
         }
     }
 
-    QString ris="1";
-    for(int i=0; i<=n; i++)
+    string ris="1";
+    for(long long i=0; i<=n; i++)
     {
         if(arr[i])
         {
-            ris=norm_mult(ris,pow(QString::number(i), count_fact(i,n)));
+            ris=norm_mult(ris,pow(string(1, i + '0'), count_fact(i,n)));
         }
     }
     return ris;
 
 }
-// QString Backend::perfect_number(long long unsigned n);
-QString Backend::calc_e(int limit){
-    QString num="1", den=fact(limit);
-    QString temp="1";
-    for(int i=limit; i>0; i--)
+// string perfect_number(long long unsigned n);
+string calc_e(long long limit){
+    string num="1", den=fact(limit);
+    string temp="1";
+    for(long long i=limit; i>0; i--)
     {
-        temp=norm_mult(temp,QString::number(i));
+        temp=norm_mult(temp, string(1, i + '0'));
         num=add_whole(num,temp);
     }
-    return div_whole(num+QString(4*limit,'0'),den);
+    return div_whole(num+string(4*limit,'0'),den);
 }
-pair<QString,QString> Backend::fast_calc_e_helper(QString a, QString b){
+pair<string,string> fast_calc_e_helper(string a, string b){
     if (b == add_whole(a, "1")){
         return {"1", b};
     }
     else{
-        QString m = div2(add_whole(a, b));
-        pair<QString,QString> temp1=fast_calc_e_helper(a,m), temp2=fast_calc_e_helper(m,b);
+        string m = div2(add_whole(a, b));
+        pair<string,string> temp1=fast_calc_e_helper(a,m), temp2=fast_calc_e_helper(m,b);
         return {
             add_whole(
                 kar_mult(
@@ -392,13 +407,13 @@ pair<QString,QString> Backend::fast_calc_e_helper(QString a, QString b){
         };
     }
 }
-QString Backend::fast_calc_e(long long unsigned limit){
-    pair<QString,QString> temp = fast_calc_e_helper("0", QString::number(limit));
-    return div_whole(temp.first + QString(4*limit,'0'), temp.second);
+string fast_calc_e(long long unsigned limit){
+    pair<string,string> temp = fast_calc_e_helper("0", to_string(limit));
+    return div_whole(temp.first + string(4*limit,'0'), temp.second);
 }
-// vector<QString> Backend::collatz(QString n);
+// vector<string> collatz(string n);
 
-QString Backend::final_eval(QString s1, QString s2, QString op){
+string final_eval(string s1, string s2, string op){
     //s2 for unary operators
     if (op == "+")
         return add_whole(s1, s2);
@@ -418,156 +433,192 @@ QString Backend::final_eval(QString s1, QString s2, QString op){
     //     return log_e(s2);
     // }
     else if (op == "!"){
-        return fact(s2.toULongLong());
+        return fact(stoull(s2));
     }
     else if (op == "^"){
-        return pow(s1, s2.toULongLong());
+        return pow(s1, stoll(s2));
     }
     // else if (op == "√"){
     //     return radix(s2);
     // }
     else{
-        throw("Unknown operator."); //fix this into an error dialog
+        throw runtime_error("Unknown operator."); //fix this long longo an error dialog
     }
 }
 
-Q_INVOKABLE QString Backend::expr_eval(QString s){
-    stack<QString> values, ops;
+string expr_eval(string s){
+    stack<string> values, ops;
     bool precIsOp = false;
-    for (long long unsigned i = 0, size = s.size(); i < size; i++){
-        if (s[i] == '('){
-            if (i > 0 && s[i-1].isDigit()){
-                while (!ops.empty() && !bigger_pemdas("*", ops.top())){
-                    QString val2 = values.top();
-                    values.pop();
+    try{
+        for (long long unsigned i = 0, size = s.size(); i < size; i++){
+            if (s[i] == ' ')
+                continue;
+            else if (s[i] == '('){
+                if (i > 0 && isdigit(s[i-1])){
+                    while (!ops.empty() && !bigger_pemdas("*", ops.top())){
+                        string op = ops.top();
+                        ops.pop();
 
-                    QString val1 = values.top();
-                    values.pop();
+                        string val2 = values.top();
+                        values.pop();
 
-                    QString op = ops.top();
-                    ops.pop();
+                        string val1 = "";
+                        if (!isUnary(op)){
+                            val1 = values.top();
+                            values.pop();
+                        }
 
-                    values.push(final_eval(val1, val2, op));
+                        values.push(final_eval(val1, val2, op));
+                    }
+                    ops.push("*");
                 }
-                ops.push("*");
-            }
-            ops.push("(");
-            precIsOp = true;
-        }
-        else if (s[i].isDigit()){
-            QString temp;
-            bool dot = false;
-
-            temp += s[i];
-            i++;
-            while (i < size && (s[i].isDigit() || s[i] == '.')){
-                if (s[i] == '.'){
-                    if (!dot)
-                        dot = true;
-                    else
-                        throw("Too many dots."); //try/catch, dialog
-                }
-
-                temp += s[i];
-
-                i++;
-            }
-
-            i--;
-            values.push(temp);
-            precIsOp = false;
-        }
-        else if (s[i] == ')'){
-            while(ops.top() != '('){
-                if (ops.empty())
-                    throw("Mismatched parenthesis.");
-
-                QString val2 = values.top();
-                values.pop();
-
-                QString val1 = values.top();
-                values.pop();
-
-                QString t_op = ops.top();
-                ops.pop();
-
-                values.push(final_eval(val1, val2, t_op));
-            }
-            ops.pop();
-            precIsOp = false;
-        }
-        else{
-            if (s[i] == 'l'){
-                while (!ops.empty() && !bigger_pemdas("log", ops.top())){
-                    if (s[i] == "^" && ops.top() == "^")
-                        break;
-
-                    QString val2 = values.top();
-                    values.pop();
-
-                    QString val1 = values.top();
-                    values.pop();
-
-                    QString op = ops.top();
-                    ops.pop();
-
-                    values.push(final_eval(val1, val2, op));
-                }
-                if (s[i+1] == 'n'){
-                    ops.push("ln");
-                }
-                else if (s[i+1] == 'o' && s[i+2] == 'g'){
-                    ops.push("log");
-                }
-                else throw("Unknown operator.");
-            }
-            else{
-                if (precIsOp){
-                    throw("Two or more operators in a row.");
-                }
-                while (!ops.empty() && !bigger_pemdas(s[i], ops.top())){
-                    qDebug() << "C";
-                    if (s[i] == "^" && ops.top() == "^")
-                        break;
-
-                    QString val2 = values.top();
-                    values.pop();
-
-                    QString val1 = values.top();
-                    values.pop();
-
-                    QString op = ops.top();
-                    ops.pop();
-
-                    values.push(final_eval(val1, val2, op));
-                }
-                ops.push(s[i]);
+                ops.push("(");
                 precIsOp = true;
             }
+            else if (isdigit(s[i])){
+                string temp;
+                bool dot = false;
+
+                temp += s[i];
+                i++;
+                while (i < size && (isdigit(s[i]) || s[i] == '.')){
+                    if (s[i] == '.'){
+                        if (!dot)
+                            dot = true;
+                        else
+                            throw runtime_error("Too many dots."); //try/catch, dialog
+                    }
+
+                    temp += s[i];
+
+                    i++;
+                }
+
+                i--;
+                values.push(temp);
+                precIsOp = false;
+            }
+            else if (s[i] == ')'){
+                if (ops.empty())
+                    throw runtime_error("Mismatched parenthesis.");
+                while(ops.top() != "("){
+                    if (ops.empty())
+                        throw runtime_error("Mismatched parenthesis.");
+
+                    string op = ops.top();
+                    ops.pop();
+
+                    string val2 = values.top();
+                    values.pop();
+
+                    string val1 = "";
+                    if (!isUnary(op)){
+                        val1 = values.top();
+                        values.pop();
+                    }
+
+                    values.push(final_eval(val1, val2, op));
+                }
+                ops.pop();
+                precIsOp = false;
+            }
+            else{
+                if (s[i] == 'l'){
+                    while (!ops.empty() && !bigger_pemdas("log", ops.top())){
+                        if (s[i] == '^' && ops.top() == "^")
+                            break;
+
+                        string op = ops.top();
+                        ops.pop();
+
+                        string val2 = values.top();
+                        values.pop();
+
+                        string val1 = "";
+                        if (!isUnary(op)){
+                            val1 = values.top();
+                            values.pop();
+                        }
+
+                        values.push(final_eval(val1, val2, op));
+                    }
+                    if (s[i+1] == 'n'){
+                        ops.push("ln");
+                    }
+                    else if (s[i+1] == 'o' && s[i+2] == 'g'){
+                        ops.push("log"); //log(log(n)) da fixare
+                    }
+                    else throw runtime_error("Unknown operator.");
+                }
+                else{
+                    if (!isOperator(string(1, s[i])))
+                        throw runtime_error("Unknown operator.");
+                    if (precIsOp)
+                        throw runtime_error("Two or more operators in a row.");
+                    while (!ops.empty() && !bigger_pemdas(string(1, s[i]), ops.top())){
+                        if (s[i] == '^' && ops.top() == "^")
+                            break;
+
+                        string op = ops.top();
+                        ops.pop();
+
+                        string val2 = values.top();
+                        values.pop();
+
+                        string val1 = "";
+                        if (!isUnary(op)){
+                            val1 = values.top();
+                            values.pop();
+                        }
+
+                        values.push(final_eval(val1, val2, op));
+                    }
+                    string temp{s[i]};
+                    ops.push(temp);
+                    if (s[i] != '!')
+                        precIsOp = true;
+                    else
+                        precIsOp = false;
+                }
+            }
         }
-        // qDebug() << values.top() << " " << ops.top();
-    }
 
-    while(!ops.empty()){
-        // if (values.size() == 1)
-        //     qDebug() << "values.size() is one";
-        if (ops.top() == "(" || ops.top() == ")")
-            throw("Mismatched parenthesis.");
+        while(!ops.empty()){
+            // if (values.size() == 1)
+            //     qDebug() << "values.size() is one";
+            if (ops.top() == "(" || ops.top() == ")")
+                throw runtime_error("Mismatched parenthesis.");
 
-        QString op = ops.top();
-        ops.pop();
+            string op = ops.top();
+            ops.pop();
 
-        QString val2 = values.top();
-        values.pop();
-
-        QString val1 = "";
-        if (!isUnary(op)){
-            val1 = values.top();
+            string val2 = values.top();
             values.pop();
+
+            string val1 = "";
+            if (!isUnary(op)){
+                val1 = values.top();
+                values.pop();
+            }
+            values.push(final_eval(val1, val2, op));
         }
 
-        values.push(final_eval(val1, val2, op));
+        return values.top();
     }
+    catch(const exception &err){
+        cerr << err.what();
+        return s;
+    }
+}
 
-    return values.top();
+int main(){
+    ofstream out("generated_output.txt");
+    
+    string s;
+    cin >> s;
+    out << expr_eval(s);
+
+    out.close();
+
+	return 0;
 }

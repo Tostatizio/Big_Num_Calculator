@@ -24,12 +24,8 @@ Window{
 
     signal keyPressed(string text)
 
-    Backend{
-        id: backend
-    }
-
-    FileOpener{
-        id: fileOpener
+    BackHelper{
+        id: backHelper
     }
     onWidthChanged: {
         if (!isResizing) {
@@ -56,266 +52,266 @@ Window{
         initialItem: mainMenu
     }
 
-    Column{
-        y: 10*root.hRatio
-        z: 4
-        anchors.right: mainView.right
-        anchors.rightMargin: 10*root.wRatio
-        spacing: 20*root.hRatio
-        SideMenuItem{
-            id: menuOpener
-            onClicked: function(){
-                if (sideMenu.width === 0){
-                    sideMenu.width = root.width/4*3;
-                    sideMenu.visible = true;
-                    sideMenuIcons.visible = true;
-                    sideMenuIcons.opacity = 1;
-                }
-                else{
-                    sideMenu.width = 0;
-                    sideMenu.visible = false;
-                    sideMenuIcons.visible = false;
-                    sideMenuIcons.opacity = 0;
-                }
-            }
-            source: "../Assets/menu_icon"
-        }
-        Column{
-            id: sideMenuIcons
-            visible: false
-            spacing: 22*root.hRatio
+    //side menu stuff
+    // Column{
+    //     y: 10*root.hRatio
+    //     z: 4
+    //     anchors.right: mainView.right
+    //     anchors.rightMargin: 10*root.wRatio
+    //     spacing: 20*root.hRatio
+    //     SideMenuItem{
+    //         id: menuOpener
+    //         onClicked: function(){
+    //             if (sideMenu.width === 0){
+    //                 sideMenu.width = root.width/4*3;
+    //                 sideMenu.visible = true;
+    //                 sideMenuIcons.visible = true;
+    //                 sideMenuIcons.opacity = 1;
+    //             }
+    //             else{
+    //                 sideMenu.width = 0;
+    //                 sideMenu.visible = false;
+    //                 sideMenuIcons.visible = false;
+    //                 sideMenuIcons.opacity = 0;
+    //             }
+    //         }
+    //         source: "../Assets/menu_icon"
+    //     }
+    //     Column{
+    //         id: sideMenuIcons
+    //         visible: false
+    //         spacing: 22*root.hRatio
 
-            Behavior on opacity{
-                NumberAnimation{duration : 300}
-            }
+    //         Behavior on opacity{
+    //             NumberAnimation{duration : 300}
+    //         }
 
-            SideMenuItem{
-                source: "../Assets/menu_icon"
-            }
-            SideMenuItem{
-                source: "../Assets/menu_icon"
-            }
-            SideMenuItem{
-                source: "../Assets/menu_icon"
-            }
-            SideMenuItem{
-                source: "../Assets/menu_icon"
-            }
-            SideMenuItem{
-                source: "../Assets/menu_icon"
-            }
-        }
-    }
+    //         SideMenuItem{
+    //             source: "../Assets/menu_icon"
+    //         }
+    //         SideMenuItem{
+    //             source: "../Assets/menu_icon"
+    //         }
+    //         SideMenuItem{
+    //             source: "../Assets/menu_icon"
+    //         }
+    //         SideMenuItem{
+    //             source: "../Assets/menu_icon"
+    //         }
+    //         SideMenuItem{
+    //             source: "../Assets/menu_icon"
+    //         }
+    //     }
+    // }
 
-    Rectangle{
-        id: sideMenu
-        z: 2
-        anchors.right: mainView.right
-        height: root.height
-        width: 0
-        color: "#111111"
-        visible: false
+    // Rectangle{
+    //     id: sideMenu
+    //     z: 2
+    //     anchors.right: mainView.right
+    //     height: root.height
+    //     width: 0
+    //     color: "#111111"
+    //     visible: false
 
-        Behavior on width{
-            NumberAnimation{duration : 300}
-        }
+    //     Behavior on width{
+    //         NumberAnimation{duration : 300}
+    //     }
 
-        Behavior on visible{
-            enabled: sideMenu.visible
-            PropertyAnimation{duration : 300}
-        }
+    //     Behavior on visible{
+    //         enabled: sideMenu.visible
+    //         PropertyAnimation{duration : 300}
+    //     }
 
-        MultiEffect{
-            source: mainView
-            anchors.fill: sideMenu
-            blurEnabled: true
-            blurMax: 64
-            blur: 1
-            contrast: -1
-            colorization: 0.6
-            colorizationColor: "#222222"
-            autoPaddingEnabled: false
-        }
+    //     MultiEffect{
+    //         source: mainView
+    //         anchors.fill: sideMenu
+    //         blurEnabled: true
+    //         blurMax: 64
+    //         blur: 1
+    //         contrast: -1
+    //         colorization: 0.6
+    //         colorizationColor: "#222222"
+    //         autoPaddingEnabled: false
+    //     }
 
-        Column{
-            y: 70*root.hRatio
-            x: 10*root.wRatio
-            spacing: 10*root.hRatio
-            Text{
-                height: 40*root.hRatio
-                text: "Settings"
-                font.pointSize: root.fontSize
-                color: "white"
-            }
-            Rectangle{
-                height: 2*root.hRatio
-                width: sideMenu.width
-                color: "white"
-            }
+    //     Column{
+    //         y: 70*root.hRatio
+    //         x: 10*root.wRatio
+    //         spacing: 10*root.hRatio
+    //         Text{
+    //             height: 40*root.hRatio
+    //             text: "Settings"
+    //             font.pointSize: root.fontSize
+    //             color: "white"
+    //         }
+    //         Rectangle{
+    //             height: 2*root.hRatio
+    //             width: sideMenu.width
+    //             color: "white"
+    //         }
 
-            Text{
-                height: 40*root.hRatio
-                text: "Settings"
-                font.pointSize: root.fontSize
-                color: "white"
-            }
-            Rectangle{
-                height: 2*root.hRatio
-                width: sideMenu.width
-                color: "white"
-            }
-            Text{
-                height: 40*root.hRatio
-                text: "Settings"
-                font.pointSize: root.fontSize
-                color: "white"
-            }
-            Rectangle{
-                height: 2*root.hRatio
-                width: sideMenu.width
-                color: "white"
-            }
-            Text{
-                height: 40*root.hRatio
-                text: "Settings"
-                font.pointSize: root.fontSize
-                color: "white"
-            }
-            Rectangle{
-                height: 2*root.hRatio
-                width: sideMenu.width
-                color: "white"
-            }
-            Text{
-                height: 40*root.hRatio
-                text: "Settings"
-                font.pointSize: root.fontSize
-                color: "white"
-            }
-            Rectangle{
-                height: 2*root.hRatio
-                width: sideMenu.width
-                color: "white"
-            }
-            Text{
-                height: 40*root.hRatio
-                text: "Settings"
-                font.pointSize: root.fontSize
-                color: "white"
-            }
-            Rectangle{
-                height: 2*root.hRatio
-                width: sideMenu.width
-                color: "white"
-            }
-            Text{
-                height: 40*root.hRatio
-                text: "Settings"
-                font.pointSize: root.fontSize
-                color: "white"
-            }
-            Rectangle{
-                height: 2*root.hRatio
-                width: sideMenu.width
-                color: "white"
-            }
-            Text{
-                height: 40*root.hRatio
-                text: "Settings"
-                font.pointSize: root.fontSize
-                color: "white"
-            }
-            Rectangle{
-                height: 2*root.hRatio
-                width: sideMenu.width
-                color: "white"
-            }
-        }
-    }
+    //         Text{
+    //             height: 40*root.hRatio
+    //             text: "Settings"
+    //             font.pointSize: root.fontSize
+    //             color: "white"
+    //         }
+    //         Rectangle{
+    //             height: 2*root.hRatio
+    //             width: sideMenu.width
+    //             color: "white"
+    //         }
+    //         Text{
+    //             height: 40*root.hRatio
+    //             text: "Settings"
+    //             font.pointSize: root.fontSize
+    //             color: "white"
+    //         }
+    //         Rectangle{
+    //             height: 2*root.hRatio
+    //             width: sideMenu.width
+    //             color: "white"
+    //         }
+    //         Text{
+    //             height: 40*root.hRatio
+    //             text: "Settings"
+    //             font.pointSize: root.fontSize
+    //             color: "white"
+    //         }
+    //         Rectangle{
+    //             height: 2*root.hRatio
+    //             width: sideMenu.width
+    //             color: "white"
+    //         }
+    //         Text{
+    //             height: 40*root.hRatio
+    //             text: "Settings"
+    //             font.pointSize: root.fontSize
+    //             color: "white"
+    //         }
+    //         Rectangle{
+    //             height: 2*root.hRatio
+    //             width: sideMenu.width
+    //             color: "white"
+    //         }
+    //         Text{
+    //             height: 40*root.hRatio
+    //             text: "Settings"
+    //             font.pointSize: root.fontSize
+    //             color: "white"
+    //         }
+    //         Rectangle{
+    //             height: 2*root.hRatio
+    //             width: sideMenu.width
+    //             color: "white"
+    //         }
+    //         Text{
+    //             height: 40*root.hRatio
+    //             text: "Settings"
+    //             font.pointSize: root.fontSize
+    //             color: "white"
+    //         }
+    //         Rectangle{
+    //             height: 2*root.hRatio
+    //             width: sideMenu.width
+    //             color: "white"
+    //         }
+    //         Text{
+    //             height: 40*root.hRatio
+    //             text: "Settings"
+    //             font.pointSize: root.fontSize
+    //             color: "white"
+    //         }
+    //         Rectangle{
+    //             height: 2*root.hRatio
+    //             width: sideMenu.width
+    //             color: "white"
+    //         }
+    //     }
+    // }
 
     onKeyPressed: (txt) => {
         let tArea = mainView.currentItem.textArea
         let cpos = tArea.cursorPosition
         switch (txt){
             case "(":
-                backend.insertMainString(cpos, "()");
+                backHelper.insertMainString(cpos, "()");
                 break;
             case ")":
-                backend.insertMainString(cpos, ")");
+                backHelper.insertMainString(cpos, ")");
                 break;
             case "!":
-                backend.insertMainString(cpos, "!");
+                backHelper.insertMainString(cpos, "!");
                 break;
             case "mod":
-                backend.insertMainString(tArea.length, " mod ");
+                backHelper.insertMainString(tArea.length, " mod ");
                 cpos = tArea.length-1
                 break;
             case "⌫":
-                backend.removeMainString(cpos-1, 1);
+                backHelper.removeMainString(cpos-1, 1);
                 cpos-=2;
                 break;
             case "1":
-                backend.insertMainString(cpos, "1");
+                backHelper.insertMainString(cpos, "1");
                 break;
             case "2":
-                backend.insertMainString(cpos, "2");
+                backHelper.insertMainString(cpos, "2");
                 break;
             case "3":
-                backend.insertMainString(cpos, "3");
+                backHelper.insertMainString(cpos, "3");
                 break;
             case "+":
-                backend.insertMainString(cpos, "+");
+                backHelper.insertMainString(cpos, "+");
                 break;
             case "^":
-                backend.insertMainString(cpos, "^");
+                backHelper.insertMainString(cpos, "^");
                 break;
             case "4":
-                backend.insertMainString(cpos, "4");
+                backHelper.insertMainString(cpos, "4");
                 break;
             case "5":
-                backend.insertMainString(cpos, "5");
+                backHelper.insertMainString(cpos, "5");
                 break;
             case "6":
-                backend.insertMainString(cpos, "6");
+                backHelper.insertMainString(cpos, "6");
                 break;
             case "-":
-                backend.insertMainString(cpos, "-");
+                backHelper.insertMainString(cpos, "-");
                 break;
             case "√":
-                backend.insertMainString(cpos, "√");
+                backHelper.insertMainString(cpos, "√");
                 break;
             case "7":
-                backend.insertMainString(cpos, "7");
+                backHelper.insertMainString(cpos, "7");
                 break;
             case "8":
-                backend.insertMainString(cpos, "8");
+                backHelper.insertMainString(cpos, "8");
                 break;
             case "9":
-                backend.insertMainString(cpos, "9");
+                backHelper.insertMainString(cpos, "9");
                 break;
             case "×":
-                backend.insertMainString(cpos, "*");
+                backHelper.insertMainString(cpos, "*");
                 break;
             case "ln":
-                backend.insertMainString(cpos, "ln()");
+                backHelper.insertMainString(cpos, "ln()");
                 cpos += 2;
                 break;
             case ".":
-                backend.insertMainString(cpos, ".");
+                backHelper.insertMainString(cpos, ".");
                 break;
             case "0":
-                backend.insertMainString(cpos, "0");
+                backHelper.insertMainString(cpos, "0");
                 break;
             case "=":
-                backend.mainString = backend.expr_eval(backend.mainString);
-                cpos = backend.mainString.length - 1;
-                // console.log(backend.expr_eval(backend.mainString));
+                backHelper.useCalculatorCpp();
+                cpos = backHelper.mainString.length - 1;
                 break;
             case "÷":
-                backend.insertMainString(cpos, "/");
+                backHelper.insertMainString(cpos, "/");
                 break;
             case "log":
-                backend.insertMainString(cpos, "log()");
+                backHelper.insertMainString(cpos, "log()");
                 cpos += 3
                 break;
         }
@@ -343,10 +339,10 @@ Window{
                     anchors.fill: parent
                     TextArea{
                         id: textArea
-                        text: backend.mainString
+                        text: backHelper.mainString
                         onTextChanged: {
-                            if(backend.mainString !== textArea.text)
-                                backend.mainString = textArea.text;
+                            if(backHelper.mainString !== textArea.text)
+                                backHelper.mainString = textArea.text;
                         }
                         background: Rectangle{color: "transparent"}
                         color: "white"
@@ -359,7 +355,7 @@ Window{
                         Keys.onPressed: (event) => {
                                             if (event.key === Qt.Key_Escape)
                                                 focus = false;
-                                            else if (event.key === Qt.Key_Return || event.key == Qt.Key_Enter){
+                                            else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter){
                                                 event.accepted = true;
                                                 keyPressed("=");
                                             }

@@ -1,14 +1,12 @@
-#include <QGuiApplication>
+#include <QApplication>
 #include <QQmlApplicationEngine>
-#include "Modules/backend.h"
-#include "Modules/fileopener.h"
+#include "Modules/backhelper.h"
 
 int main(int argc, char *argv[])
 {
-    QGuiApplication app(argc, argv);
+    QApplication app(argc, argv);
 
-    qmlRegisterType<Backend>("BigNumCalculator.Modules", 1, 0, "Backend");
-    qmlRegisterType<FileOpener>("BigNumCalculator.Modules", 1, 0, "FileOpener");
+    qmlRegisterType<BackHelper>("BigNumCalculator.Modules", 1, 0, "BackHelper");
 
     QQmlApplicationEngine engine;
     QObject::connect(

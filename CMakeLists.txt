@@ -16,8 +16,9 @@ qt_add_qml_module(appBigNumCalculator
     URI BigNumCalculator
     VERSION 1.0
     QML_FILES Main.qml Components/BasicNumpad.qml  Components/MenuItem.qml Components/NumpadButton.qml Components/SideMenuItem.qml
-    SOURCES Modules/backend.cpp Modules/backend.h Modules/fileopener.cpp Modules/fileopener.h
+    SOURCES  Modules/backhelper.cpp Modules/backhelper.h
     RESOURCES Assets/menu_icon.png
+    RESOURCES
 )
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
